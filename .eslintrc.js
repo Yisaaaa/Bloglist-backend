@@ -24,5 +24,6 @@ module.exports = {
 		indent: ["error", "tab"],
 		quotes: ["error", "double"],
 		"no-tabs": 0,
+		"no-console": 0,
 	},
 };
