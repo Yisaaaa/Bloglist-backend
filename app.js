@@ -8,6 +8,14 @@ const logger = require("./utils/logger");
 
 const app = express();
 
+mongoose.set("toJSON", {
+	transform: (request, response) => {
+		response.id = response._id.toString();
+		delete response._id;
+		delete response.__v;
+	},
+});
+
 const mongoUrl = config.MONGODB_URI;
 mongoose
 	.connect(mongoUrl)
@@ -16,7 +24,7 @@ mongoose
 
 app.use(cors());
 app.use(express.json());
-app.use("api/blogs", blogRouter);
+app.use("/api/blogs", blogRouter);
 app.use(middleware.unknownEndpoint);
 
 module.exports = app;
