@@ -25,5 +25,6 @@ module.exports = {
 		quotes: ["error", "double"],
 		"no-tabs": 0,
 		"no-console": 0,
+		"prefer-destructuring": 0,
 	},
 };
