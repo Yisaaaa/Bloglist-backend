@@ -4,6 +4,7 @@ module.exports = {
 		browser: true,
 		commonjs: true,
 		es2021: true,
+		jest: true,
 	},
 	extends: "airbnb-base",
 	overrides: [
@@ -21,11 +22,15 @@ module.exports = {
 		ecmaVersion: "latest",
 	},
 	rules: {
-		indent: ["error", "tab"],
+		indent: 0,
 		quotes: ["error", "double"],
 		"no-tabs": 0,
 		"no-console": 0,
 		"prefer-destructuring": 0,
 		"no-underscore-dangle": 0,
+		"arrow-body-style": 0,
+		"no-mixed-spaces-and-tabs": 0,
+		"comma-dangle": 0,
+		"import/no-extraneous-dependencies": 0,
 	},
 };
