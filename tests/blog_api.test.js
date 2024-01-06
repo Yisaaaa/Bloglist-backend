@@ -44,8 +44,14 @@ test("all blogs are returned", async () => {
 		.expect("Content-Type", /application\/json/);
 
 	expect(response.body).toHaveLength(initialBlogs.length);
+}, 10000);
+
+test("blog has a unique identifier property named 'id'", async () => {
+	const response = await api.get("/api/blogs");
+
+	expect(response.body[0].id).toBeDefined();
 });
 
-afterEach(async () => {
+afterAll(async () => {
 	await mongoose.connection.close();
 });
