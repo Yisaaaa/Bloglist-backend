@@ -6,14 +6,18 @@ blogRouter.get("/", async (request, response) => {
 	response.json(blogs);
 });
 
-blogRouter.post("/", (request, response, next) => {
-	const blog = new Blog(request.body);
+blogRouter.post("/", async (request, response) => {
+	const body = request.body;
 
-	blog.save()
-		.then((result) => {
-			response.status(201).json(result);
-		})
-		.catch((error) => next(error));
+	if (!request.body.title || !request.body.url) {
+		return response
+			.status(400)
+			.json({ error: "missing title or url property" });
+	}
+
+	let newBlog = { ...body, likes: body.likes ? body.likes : 0 };
+	newBlog = await new Blog(newBlog).save();
+	response.status(201).json(newBlog);
 });
 
 module.exports = blogRouter;
