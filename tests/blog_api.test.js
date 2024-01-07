@@ -109,6 +109,36 @@ describe("addition of a new blog", () => {
 	}, 100000);
 });
 
+describe("deletion of an specific blog", () => {
+	test("a blog can be deleted", async () => {
+		const blogToBeDeleted = (await Blog.find({}))[0].toJSON();
+
+		await api.delete(`/api/blogs/${blogToBeDeleted.id}`).expect(204);
+
+		const blogTitles = (await Blog.find({})).map((blog) => blog.title);
+
+		expect(blogTitles).not.toContain(`${blogToBeDeleted.title}`);
+	});
+});
+
+describe("updating a note", () => {
+	test("a blog can be updated", async () => {
+		const blogToUpdate = (await Blog.find({}))[0].toJSON();
+		const newBlog = {
+			...blogToUpdate,
+			likes: 9999,
+		};
+
+		await api
+			.put(`/api/blogs/${blogToUpdate.id}`)
+			.send(newBlog)
+			.expect(200);
+
+		const updatedBlog = await Blog.findById(blogToUpdate.id);
+		expect(updatedBlog.likes).toBe(newBlog.likes);
+	});
+});
+
 afterAll(async () => {
 	await mongoose.connection.close();
 });
