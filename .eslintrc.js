@@ -33,5 +33,6 @@ module.exports = {
 		"comma-dangle": 0,
 		"import/no-extraneous-dependencies": 0,
 		"no-param-reassign": 0,
+		"no-else-return": 0,
 	},
 };
