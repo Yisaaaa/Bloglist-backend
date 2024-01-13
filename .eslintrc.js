@@ -34,5 +34,6 @@ module.exports = {
 		"import/no-extraneous-dependencies": 0,
 		"no-param-reassign": 0,
 		"no-else-return": 0,
+		"operator-linebreak": 0,
 	},
 };

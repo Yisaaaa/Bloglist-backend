@@ -2,8 +2,17 @@ const supertest = require("supertest");
 const mongoose = require("mongoose");
 const app = require("../app");
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
 const api = supertest(app);
+
+const initialUsers = [
+	{
+		username: "yisa",
+		name: "Yisa",
+		password: "secret",
+	},
+];
 
 const initialBlogs = [
 	{
@@ -28,11 +37,18 @@ const initialBlogs = [
 
 beforeEach(async () => {
 	await Blog.deleteMany();
+	await User.deleteMany();
 
 	await Promise.all(
 		initialBlogs.map(async (blog) => {
 			const newBlog = new Blog(blog);
 			await newBlog.save();
+		})
+	);
+
+	await Promise.all(
+		initialUsers.map(async (user) => {
+			await api.post("/api/users").send(user);
 		})
 	);
 });
@@ -56,6 +72,12 @@ describe("when there are initial blogs that are saved", () => {
 
 describe("addition of a new blog", () => {
 	test("a new blog can be added", async () => {
+		const user = await api
+			.post("/api/login")
+			.send({ username: "yisa", password: "secret" });
+
+		const token = `Bearer ${user.body.token}`;
+
 		const newBlog = {
 			title: "Why the Earth is round and keeps on rounding",
 			author: "Mad Scientist",
@@ -63,7 +85,11 @@ describe("addition of a new blog", () => {
 			likes: 17891,
 		};
 
-		await api.post("/api/blogs").send(newBlog).expect(201);
+		await api
+			.post("/api/blogs")
+			.send(newBlog)
+			.set("Authorization", token)
+			.expect(201);
 
 		const blogsAfterAdding = await Blog.find({});
 		const titles = blogsAfterAdding.map((blog) => blog.title);
@@ -75,6 +101,12 @@ describe("addition of a new blog", () => {
 	});
 
 	test("a new blog with no likes property will have a default value of 0", async () => {
+		const user = await api
+			.post("/api/login")
+			.send({ username: "yisa", password: "secret" });
+
+		const token = `Bearer ${user.body.token}`;
+
 		const blogWithNoLikes = {
 			title: "Why the Earth is round and keeps on rounding",
 			author: "Mad Scientist",
@@ -84,14 +116,20 @@ describe("addition of a new blog", () => {
 		const savedBlog = await api
 			.post("/api/blogs")
 			.send(blogWithNoLikes)
+			.set("Authorization", token)
 			.expect(201);
 
-		console.log(savedBlog.body);
 		expect(savedBlog.body.likes).toBeDefined();
 		expect(savedBlog.body.likes).toBe(0);
 	});
 
 	test("a blog with no title or url is a bad request", async () => {
+		const user = await api
+			.post("/api/login")
+			.send({ username: "yisa", password: "secret" });
+
+		const token = `Bearer ${user.body.token}`;
+
 		const blogWithNoUrl = {
 			title: "Why the Earth is round and keeps on rounding",
 			author: "Mad Scientist",
@@ -104,9 +142,28 @@ describe("addition of a new blog", () => {
 			likes: 17891,
 		};
 
-		await api.post("/api/blogs").send(blogWithNoUrl).expect(400);
-		await api.post("/api/blogs").send(blogWithNoTitle).expect(400);
+		await api
+			.post("/api/blogs")
+			.send(blogWithNoUrl)
+			.set("Authorization", token)
+			.expect(400);
+		await api
+			.post("/api/blogs")
+			.send(blogWithNoTitle)
+			.set("Authorization", token)
+			.expect(400);
 	}, 100000);
+
+	test("adding a blog without token is not allowed", async () => {
+		const blog = {
+			title: "This request has no token provided",
+			author: "Mad Scientist",
+			url: "someurl",
+			likes: 17891,
+		};
+
+		await api.post("/api/blogs").send(blog).expect(401);
+	}, 10000);
 });
 
 describe("deletion of an specific blog", () => {

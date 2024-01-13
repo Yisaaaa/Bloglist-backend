@@ -1,6 +1,6 @@
 const blogRouter = require("express").Router();
 const Blog = require("../models/blog");
-const User = require("../models/user");
+const userExtractor = require("../utils/middleware").userExtractor;
 
 blogRouter.get("/", async (request, response) => {
 	const blogs = await Blog.find({}).populate("user", {
@@ -10,18 +10,28 @@ blogRouter.get("/", async (request, response) => {
 	response.json(blogs);
 });
 
-blogRouter.post("/", async (request, response) => {
-	const body = request.body;
-
-	const users = await User.find({});
-
-	const user = users[0];
-
+blogRouter.post("/", userExtractor, async (request, response) => {
 	if (!request.body.title || !request.body.url) {
 		return response
 			.status(400)
 			.json({ error: "missing title or url property" });
 	}
+
+	// const token = request.token;
+	// const decodedToken = jsonwebtoken.decode(token, process.env.SECRET);
+
+	// if (!decodedToken) {
+	// 	return response.status(401).json({ error: "token invalid" });
+	// }
+
+	// const user = await User.findById(decodedToken.id);
+
+	// if (!user) {
+	// 	return response.status(401).json({ eror: "invalid user" });
+	// }
+
+	const body = request.body;
+	const user = request.user;
 
 	let newBlog = {
 		...body,
@@ -38,10 +48,29 @@ blogRouter.post("/", async (request, response) => {
 	return response.status(201).json(newBlog);
 });
 
-blogRouter.delete("/:id", async (request, response) => {
-	const id = request.params.id;
-	await Blog.findByIdAndDelete(id);
-	response.status(204).end();
+blogRouter.delete("/:id", userExtractor, async (request, response) => {
+	// const token = request.token;
+	// const decodedToken = jsonwebtoken.decode(token, process.env.SECRET);
+
+	// if (!decodedToken) {
+	// 	return response.status(401).json({ error: "token invalid" });
+	// }
+
+	// const user = await User.findById(decodedToken.id);
+
+	const user = request.user;
+	const blog = await Blog.findById(request.params.id);
+
+	if (user._id.toString() !== blog.user) {
+		return response.status(401).json({ error: "invalid user" });
+	}
+
+	await blog.delete();
+	return response.status(204).end();
+
+	// const id = request.params.id;
+	// await Blog.findByIdAndDelete(id);
+	// response.status(204).end();
 });
 
 blogRouter.put("/:id", async (request, response) => {
