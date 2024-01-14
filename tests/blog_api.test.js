@@ -6,14 +6,6 @@ const User = require("../models/user");
 
 const api = supertest(app);
 
-const initialUsers = [
-	{
-		username: "yisa",
-		name: "Yisa",
-		password: "secret",
-	},
-];
-
 const initialBlogs = [
 	{
 		title: "To pimp a butterfly",
@@ -27,28 +19,15 @@ const initialBlogs = [
 		url: "somerandomurl1",
 		likes: 5431,
 	},
-	{
-		title: "What the dog doin",
-		author: "Unknown",
-		url: "somerandomurl2",
-		likes: 98573,
-	},
 ];
 
 beforeEach(async () => {
 	await Blog.deleteMany();
 	await User.deleteMany();
-
 	await Promise.all(
 		initialBlogs.map(async (blog) => {
 			const newBlog = new Blog(blog);
 			await newBlog.save();
-		})
-	);
-
-	await Promise.all(
-		initialUsers.map(async (user) => {
-			await api.post("/api/users").send(user);
 		})
 	);
 });
@@ -71,13 +50,18 @@ describe("when there are initial blogs that are saved", () => {
 });
 
 describe("addition of a new blog", () => {
+	let token;
+
+	beforeEach(async () => {
+		const newUser = { username: "luis", name: "luis", password: "secret" };
+
+		await api.post("/api/users").send(newUser);
+		const user = await api.post("/api/login").send(newUser);
+
+		token = `Bearer ${user.body.token}`;
+	});
+
 	test("a new blog can be added", async () => {
-		const user = await api
-			.post("/api/login")
-			.send({ username: "yisa", password: "secret" });
-
-		const token = `Bearer ${user.body.token}`;
-
 		const newBlog = {
 			title: "Why the Earth is round and keeps on rounding",
 			author: "Mad Scientist",
@@ -101,12 +85,6 @@ describe("addition of a new blog", () => {
 	});
 
 	test("a new blog with no likes property will have a default value of 0", async () => {
-		const user = await api
-			.post("/api/login")
-			.send({ username: "yisa", password: "secret" });
-
-		const token = `Bearer ${user.body.token}`;
-
 		const blogWithNoLikes = {
 			title: "Why the Earth is round and keeps on rounding",
 			author: "Mad Scientist",
@@ -124,12 +102,6 @@ describe("addition of a new blog", () => {
 	});
 
 	test("a blog with no title or url is a bad request", async () => {
-		const user = await api
-			.post("/api/login")
-			.send({ username: "yisa", password: "secret" });
-
-		const token = `Bearer ${user.body.token}`;
-
 		const blogWithNoUrl = {
 			title: "Why the Earth is round and keeps on rounding",
 			author: "Mad Scientist",
@@ -147,6 +119,7 @@ describe("addition of a new blog", () => {
 			.send(blogWithNoUrl)
 			.set("Authorization", token)
 			.expect(400);
+
 		await api
 			.post("/api/blogs")
 			.send(blogWithNoTitle)
@@ -167,14 +140,40 @@ describe("addition of a new blog", () => {
 });
 
 describe("deletion of an specific blog", () => {
-	test("a blog can be deleted", async () => {
-		const blogToBeDeleted = (await Blog.find({}))[0].toJSON();
+	let token;
 
-		await api.delete(`/api/blogs/${blogToBeDeleted.id}`).expect(204);
+	beforeEach(async () => {
+		const newUser = {
+			username: "luis",
+			name: "luis",
+			password: "secret",
+		};
+		await api.post("/api/users").send(newUser);
+		const user = await api.post("/api/login").send(newUser);
+
+		token = `Bearer ${user.body.token}`;
+	});
+
+	test("a blog can be deleted", async () => {
+		let newBlog = {
+			title: "Why the Earth is round and keeps on rounding",
+			author: "Mad Scientist",
+			url: "http://madscience.com",
+		};
+
+		newBlog = await api
+			.post("/api/blogs")
+			.send(newBlog)
+			.set("Authorization", token)
+			.expect(201);
+
+		await api
+			.delete(`/api/blogs/${newBlog.body.id}`)
+			.set("Authorization", token);
 
 		const blogTitles = (await Blog.find({})).map((blog) => blog.title);
 
-		expect(blogTitles).not.toContain(`${blogToBeDeleted.title}`);
+		expect(blogTitles).not.toContain(`${newBlog.title}`);
 	});
 });
 
