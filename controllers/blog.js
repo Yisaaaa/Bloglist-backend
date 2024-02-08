@@ -86,12 +86,19 @@ blogRouter.put("/:id", async (request, response) => {
 		author: body.author,
 		url: body.url,
 		likes: body.likes,
+		user: body.user,
 	};
 
 	const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {
 		new: true,
 	});
 
+	await updatedBlog.populate("user", {
+		username: 1,
+		name: 1,
+	});
+
 	response.json(updatedBlog);
 });
+
 module.exports = blogRouter;
