@@ -70,7 +70,7 @@ blogRouter.delete("/:id", userExtractor, async (request, response) => {
 		return response.status(401).json({ error: "invalid user" });
 	}
 
-	await blog.delete();
+	await blog.deleteOne();
 	return response.status(204).end();
 
 	// const id = request.params.id;
