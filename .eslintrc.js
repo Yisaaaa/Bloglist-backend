@@ -35,5 +35,6 @@ module.exports = {
 		"no-param-reassign": 0,
 		"no-else-return": 0,
 		"operator-linebreak": 0,
+		"global-require": 0,
 	},
 };
