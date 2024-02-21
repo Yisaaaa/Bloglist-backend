@@ -4,10 +4,10 @@ const mongoose = require("mongoose");
 require("express-async-errors");
 const userRouter = require("./controllers/user");
 const blogRouter = require("./controllers/blog");
+const loginRouter = require("./controllers/login");
 const middleware = require("./utils/middleware");
 const config = require("./utils/config");
 const logger = require("./utils/logger");
-const loginRouter = require("./controllers/login");
 
 const app = express();
 
